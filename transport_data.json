@@ -1,16 +1,16 @@
 {
   "transport_modes": [
-    "Car", 
-    "Taxi/Martı", 
-    "Bus", 
-    "Minibuses", 
-    "Metrobus", 
-    "Metro/Marmaray", 
+    "Car",
+    "Taxi/Mart\u00c4\u00b1",
+    "Bus",
+    "Minibuses",
+    "Metrobus",
+    "Metro/Marmaray",
     "Ferry"
   ],
   "criteria": [
     "CO2 Emission",
-    "Air Pollution", 
+    "Air Pollution",
     "Noise Pollution",
     "Occupancy Rate",
     "Transport Cost",
@@ -41,7 +41,7 @@
       "Flexibility": 33,
       "Comfort": 35
     },
-    "Taxi/Martı": {
+    "Taxi/Mart\u00c4\u00b1": {
       "CO2 Emission": 27,
       "Air Pollution": 22,
       "Noise Pollution": 14,
@@ -169,5 +169,29 @@
     "Safety": "Higher is better",
     "Flexibility": "Higher is better",
     "Comfort": "Higher is better"
+  },
+  "scientific_weights": {
+    "Occupancy Rate": 0.143851,
+    "Waiting Time": 0.135589,
+    "Comfort": 0.107004,
+    "Flexibility": 0.099278,
+    "Transport Cost": 0.068713,
+    "Capacity": 0.069592,
+    "Noise Pollution": 0.062939,
+    "Air Pollution": 0.061391,
+    "Travel Time": 0.057378,
+    "Availability": 0.046897,
+    "Intermodality": 0.045299,
+    "CO2 Emission": 0.042356,
+    "Accessibility": 0.036489,
+    "Safety": 0.023225
+  },
+  "artasi_rankings": {
+    "1": "Car",
+    "2": "Ferry",
+    "3": "Metrobus",
+    "4": "Metro/Marmaray",
+    "5": "Bus",
+    "6": "Taxi/Mart\u0131"
   }
-} 
+}

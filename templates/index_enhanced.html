@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Public Transport Decision Maker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .mode-tab.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .mode-tab:not(.active) {
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .mode-explanation {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .criteria-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .criteria-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s;
+        }
+
+        .criteria-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .criteria-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scientific-weight {
+            font-size: 0.8rem;
+            color: #666;
+            background: #e3f2fd;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .criteria-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            margin: 10px 0;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .current-value {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: block;
+            margin: 0 auto;
+            min-width: 300px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .result-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .result-tab.active {
+            border-bottom-color: #4CAF50;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .result-content {
+            display: none;
+        }
+
+        .result-content.active {
+            display: block;
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .recommendation-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .recommendation-card.rank-1 {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #fff9c4, #ffffff);
+        }
+
+        .recommendation-card.rank-2 {
+            border-color: #C0C0C0;
+            background: linear-gradient(135deg, #f5f5f5, #ffffff);
+        }
+
+        .recommendation-card.rank-3 {
+            border-color: #CD7F32;
+            background: linear-gradient(135deg, #ffeaa7, #ffffff);
+        }
+
+        .rank {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #4CAF50;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .transport-icon {
+            font-size: 3rem;
+            margin: 10px 0;
+        }
+
+        .transport-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .comparison-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '⏳';
+            animation: spin 2s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .scientific-weights-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .weight-bar {
+            background: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .weight-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .criteria-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+
+            .mode-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Enhanced Public Transport Decision Maker</h1>
+            <p>Compare user preferences vs scientific weights vs ARTASI expert rankings</p>
+        </div>
+        
+        <div class="content">
+            <div class="mode-selector">
+                <h3>Choose Analysis Mode</h3>
+                <div class="mode-tabs">
+                    <button class="mode-tab active" data-mode="comparison">🔍 Full Comparison</button>
+                    <button class="mode-tab" data-mode="user">👤 User Preferences</button>
+                    <button class="mode-tab" data-mode="scientific">🧪 Scientific Weights</button>
+                </div>
+                <div class="mode-explanation">
+                    <span id="mode-text">Compare your preferences with scientific research and expert rankings</span>
+                </div>
+            </div>
+
+            <div class="criteria-section">
+                <h2 class="section-title">Set Your Preferences</h2>
+                <div class="scientific-weights-info">
+                    <strong>💡 Tip:</strong> Scientific weights shown in blue are based on research from your Excel data.
+                    The most important criteria according to research are: <strong>Occupancy Rate, Waiting Time, and Comfort</strong>.
+                </div>
+                
+                <div class="criteria-grid">
+                    {% for criterion in criteria %}
+                    <div class="criteria-item">
+                        <div class="criteria-label">
+                            {{ criterion }}
+                            <span class="scientific-weight">{{ (scientific_weights[criterion] * 100) | round(1) }}%</span>
+                        </div>
+                        <div class="criteria-description">{{ descriptions[criterion] }}</div>
+                        <div class="slider-container">
+                            <input type="range" 
+                                   class="slider" 
+                                   id="{{ criterion }}" 
+                                   min="1" 
+                                   max="5" 
+                                   value="3"
+                                   oninput="updateValue('{{ criterion }}', this.value)">
+                            <div class="slider-labels">
+                                <span>Not Important</span>
+                                <span>Very Important</span>
+                            </div>
+                            <div class="current-value" id="{{ criterion }}_value">Importance: 3</div>
+                        </div>
+                        <div class="weight-bar">
+                            <div class="weight-fill" style="width: {{ (scientific_weights[criterion] * 100 / 0.144) | round(1) }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateRecommendations()">
+                    🚀 Calculate Enhanced Recommendations
+                </button>
+            </div>
+            
+            <div class="results-section" id="results">
+                <h2 class="section-title">Enhanced Analysis Results</h2>
+                
+                <div class="results-tabs">
+                    <button class="result-tab active" data-result="comparison">🔍 Full Comparison</button>
+                    <button class="result-tab" data-result="user">👤 Your Results</button>
+                    <button class="result-tab" data-result="scientific">🧪 Scientific Results</button>
+                    <button class="result-tab" data-result="artasi">🏆 Expert Rankings</button>
+                </div>
+
+                <div id="loading" class="loading" style="display: none;">
+                    Running enhanced analysis with multiple algorithms...
+                </div>
+
+                <div class="result-content active" id="comparison-content">
+                    <div class="comparison-section">
+                        <h3>🔍 Method Comparison</h3>
+                        <div id="comparison-results"></div>
+                    </div>
+                </div>
+
+                <div class="result-content" id="user-content">
+                    <h3>👤 Your Personalized Recommendations</h3>
+                    <div class="recommendations" id="user-recommendations"></div>
+                </div>
+
+                <div class="result-content" id="scientific-content">
+                    <h3>🧪 Scientific Weight-Based Results</h3>
+                    <div class="recommendations" id="scientific-recommendations"></div>
+                </div>
+
+                <div class="result-content" id="artasi-content">
+                    <h3>🏆 ARTASI Expert Rankings</h3>
+                    <div class="recommendations" id="artasi-recommendations"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const transportIcons = {
+            'Car': '🚗',
+            'Taxi/Martı': '🚕',
+            'Bus': '🚌',
+            'Minibuses': '🚐',
+            'Metrobus': '🚎',
+            'Metro/Marmaray': '🚇',
+            'Ferry': '⛴️'
+        };
+
+        const modeExplanations = {
+            'comparison': 'Compare your preferences with scientific research and expert rankings',
+            'user': 'Get recommendations based purely on your personal preferences',
+            'scientific': 'See results using scientifically determined criteria weights from research'
+        };
+
+        // Mode selector functionality
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const mode = tab.dataset.mode;
+                document.getElementById('mode-text').textContent = modeExplanations[mode];
+            });
+        });
+
+        // Result tab functionality
+        document.querySelectorAll('.result-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.result-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.result + '-content').classList.add('active');
+            });
+        });
+
+        function updateValue(criterion, value) {
+            document.getElementById(criterion + '_value').textContent = `Importance: ${value}`;
+        }
+
+        async function calculateRecommendations() {
+            const weights = {};
+            const criteria = {{ criteria | tojson }};
+            
+            criteria.forEach(criterion => {
+                const slider = document.getElementById(criterion);
+                weights[criterion] = parseInt(slider.value);
+            });
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'block';
+            
+            // Clear previous results
+            ['comparison-results', 'user-recommendations', 'scientific-recommendations', 'artasi-recommendations'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        weights: weights,
+                        mode: 'comparison'
+                    })
+                });
+
+                const data = await response.json();
+                displayEnhancedResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').innerHTML = 'Error calculating recommendations. Please try again.';
+            }
+        }
+
+        function displayEnhancedResults(data) {
+            document.getElementById('loading').style.display = 'none';
+            
+            // Display comparison results
+            displayComparison(data);
+            
+            // Display individual results
+            displayRecommendations(data.user_recommendations, 'user-recommendations', 'Your Top Choices');
+            displayRecommendations(data.scientific_recommendations, 'scientific-recommendations', 'Research-Based Top Choices');
+            displayARTASI(data.artasi_comparison);
+        }
+
+        function displayComparison(data) {
+            const comparisonDiv = document.getElementById('comparison-results');
+            
+            // Create comparison table
+            const transportModes = Object.keys(data.user_scores);
+            let comparisonHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; border: 1px solid #ddd;">Transport Mode</th>
+                                <th style="padding: 12px; border: 1px solid #ddd;">👤 Your Score</th>
+                                <th style="padding: 12px; border: 1px solid #ddd;">🧪 Scientific Score</th>
+                                <th style="padding: 12px; border: 1px solid #ddd;">🏆 Expert Rank</th>
+                                <th style="padding: 12px; border: 1px solid #ddd;">📊 Consensus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            transportModes.forEach(mode => {
+                const userScore = data.user_scores[mode].toFixed(1);
+                const scientificScore = data.scientific_scores[mode].toFixed(1);
+                const expertRank = getARTASIRank(mode, data.artasi_comparison);
+                const consensus = calculateConsensus(userScore, scientificScore, expertRank);
+                
+                comparisonHTML += `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">
+                            ${transportIcons[mode] || '🚌'} ${mode}
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">
+                            <strong style="color: #4CAF50;">${userScore}%</strong>
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">
+                            <strong style="color: #2196F3;">${scientificScore}%</strong>
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">
+                            <strong style="color: #FF9800;">#${expertRank}</strong>
+                        </td>
+                        <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">
+                            ${consensus}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            comparisonHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            comparisonDiv.innerHTML = comparisonHTML;
+        }
+
+        function displayRecommendations(recommendations, containerId, title) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            recommendations.forEach((rec, index) => {
+                const [mode, score] = rec;
+                const card = document.createElement('div');
+                card.className = `recommendation-card rank-${index + 1}`;
+                card.innerHTML = `
+                    <div class="rank">${index + 1}</div>
+                    <div class="transport-icon">${transportIcons[mode] || '🚌'}</div>
+                    <div class="transport-name">${mode}</div>
+                    <div class="score">${score.toFixed(1)}%</div>
+                    <div style="color: #666; font-size: 0.9rem;">Match Score</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function displayARTASI(artasiData) {
+            const container = document.getElementById('artasi-recommendations');
+            container.innerHTML = '';
+            
+            artasiData.forEach((item, index) => {
+                const [mode, rank] = item;
+                const card = document.createElement('div');
+                card.className = `recommendation-card rank-${index + 1}`;
+                card.innerHTML = `
+                    <div class="rank">${index + 1}</div>
+                    <div class="transport-icon">${transportIcons[mode] || '🚌'}</div>
+                    <div class="transport-name">${mode}</div>
+                    <div style="color: #FF9800; font-weight: bold;">${rank}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getARTASIRank(mode, artasiData) {
+            for (let i = 0; i < artasiData.length; i++) {
+                if (artasiData[i][0] === mode) {
+                    return i + 1;
+                }
+            }
+            return 'N/A';
+        }
+
+        function calculateConsensus(userScore, scientificScore, expertRank) {
+            const avgScore = (parseFloat(userScore) + parseFloat(scientificScore)) / 2;
+            const rankScore = (8 - expertRank) * 12.5; // Convert rank to score out of 100
+            
+            const totalConsensus = (avgScore + rankScore) / 2;
+            
+            if (totalConsensus > 75) return '🟢 High';
+            if (totalConsensus > 50) return '🟡 Medium';
+            return '🔴 Low';
+        }
+
+        // Initialize default values
+        document.addEventListener('DOMContentLoaded', function() {
+            const criteria = {{ criteria | tojson }};
+            criteria.forEach(criterion => {
+                updateValue(criterion, 3);
+            });
+        });
+    </script>
+</body>
+</html> 
