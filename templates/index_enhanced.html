@@ -62,19 +62,11 @@
             padding: 12px 24px;
             border: none;
             border-radius: 25px;
-            cursor: pointer;
+            cursor: default;
             transition: all 0.3s;
             font-weight: bold;
-        }
-
-        .mode-tab.active {
             background: #4CAF50;
             color: white;
-        }
-
-        .mode-tab:not(.active) {
-            background: #e9ecef;
-            color: #666;
         }
 
         .mode-explanation {
@@ -176,6 +168,36 @@
             margin-top: 10px;
             font-weight: bold;
             color: #4CAF50;
+        }
+
+        .importance-bar-container {
+            margin-top: 15px;
+        }
+
+        .importance-bar {
+            background: #e9ecef;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .importance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.4s ease-in-out;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+
+        .importance-text {
+            font-size: 0.85rem;
+            color: #555;
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 500;
         }
 
         .calculate-btn {
@@ -347,20 +369,6 @@
             margin: 15px 0;
         }
 
-        .weight-bar {
-            background: #e9ecef;
-            height: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 5px 0;
-        }
-
-        .weight-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            transition: width 0.3s;
-        }
-
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -383,17 +391,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Enhanced Public Transport Decision Maker</h1>
+            <h1>🚀 Public Transport Decision Maker</h1>
             <p>Compare user preferences vs scientific weights vs ARTASI expert rankings</p>
         </div>
         
         <div class="content">
             <div class="mode-selector">
-                <h3>Choose Analysis Mode</h3>
+                <h3>Analysis Mode</h3>
                 <div class="mode-tabs">
                     <button class="mode-tab active" data-mode="comparison">🔍 Full Comparison</button>
-                    <button class="mode-tab" data-mode="user">👤 User Preferences</button>
-                    <button class="mode-tab" data-mode="scientific">🧪 Scientific Weights</button>
                 </div>
                 <div class="mode-explanation">
                     <span id="mode-text">Compare your preferences with scientific research and expert rankings</span>
@@ -403,7 +409,7 @@
             <div class="criteria-section">
                 <h2 class="section-title">Set Your Preferences</h2>
                 <div class="scientific-weights-info">
-                    <strong>💡 Tip:</strong> Scientific weights shown in blue are based on research from your Excel data.
+                    <strong>💡 Tip:</strong> Scientific weights shown in blue are based on our data.
                     The most important criteria according to research are: <strong>Occupancy Rate, Waiting Time, and Comfort</strong>.
                 </div>
                 
@@ -429,8 +435,11 @@
                             </div>
                             <div class="current-value" id="{{ criterion }}_value">Importance: 3</div>
                         </div>
-                        <div class="weight-bar">
-                            <div class="weight-fill" style="width: {{ (scientific_weights[criterion] * 100 / 0.144) | round(1) }}%"></div>
+                        <div class="importance-bar-container">
+                            <div class="importance-bar">
+                                <div class="importance-fill" id="{{ criterion }}_bar" style="width: 60%;"></div>
+                            </div>
+                            <div class="importance-text">Your Importance Level</div>
                         </div>
                     </div>
                     {% endfor %}
@@ -521,6 +530,9 @@
 
         function updateValue(criterion, value) {
             document.getElementById(criterion + '_value').textContent = `Importance: ${value}`;
+            // Update the importance bar width (20% per level, from 20% to 100%)
+            const barWidth = (value * 20) + '%';
+            document.getElementById(criterion + '_bar').style.width = barWidth;
         }
 
         async function calculateRecommendations() {
