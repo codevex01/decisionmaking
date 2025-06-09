@@ -1,12 +1,138 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import math
+import pandas as pd
+import os
 
 app = Flask(__name__)
 
-# Load transport data
-with open('transport_data.json', 'r') as f:
-    transport_data = json.load(f)
+def load_excel_data():
+    """Excel dosyasından transport verilerini yükle"""
+    try:
+        excel_file = 'article 16 group 32.xlsx'
+        
+        if not os.path.exists(excel_file):
+            print(f"❌ Excel dosyası bulunamadı: {excel_file}")
+            return load_json_fallback()
+        
+        print("📊 Excel dosyasından veri yükleniyor...")
+        
+        # Excel'i doğru header ile oku (3. satır header)
+        df = pd.read_excel(excel_file, sheet_name=0, header=3)
+        
+        # Gereksiz sütunları temizle
+        df = df.dropna(how='all', axis=1)  # Tamamen boş sütunları sil
+        df = df.dropna(how='all', axis=0)  # Tamamen boş satırları sil
+        
+        print(f"✅ Excel verisi yüklendi: {df.shape}")
+        print(f"📋 Sütunlar: {df.columns.tolist()}")
+        
+        # Excel verisini JSON formatına dönüştür
+        transport_data = convert_excel_to_transport_data(df)
+        print("✅ Excel verisi JSON formatına dönüştürüldü")
+        
+        return transport_data
+        
+    except Exception as e:
+        print(f"❌ Excel okuma hatası: {e}")
+        print("🔄 JSON dosyasından yükleniyor...")
+        return load_json_fallback()
+
+def convert_excel_to_transport_data(df):
+    """Excel DataFrame'ini transport_data JSON formatına dönüştür"""
+    transport_data = {}
+    
+    # Transport modlarını al (A/C sütunundan) - sadece gerçek transport modları
+    all_modes = df['A/C'].dropna().tolist()
+    
+    # Gerçek transport modlarını filtrele
+    valid_transport_modes = [
+        'Car', 'Taxi/Martı', 'Bus', 'Minibuses', 'Metrobus', 
+        'Metro/Marmaray', 'Ferry', 'Sea taxi'
+    ]
+    
+    transport_modes = []
+    for mode in all_modes:
+        if mode in valid_transport_modes:
+            transport_modes.append(mode)
+        elif mode == 'Taxi/Mart\u0131':  # Unicode karakteri düzelt
+            transport_modes.append('Taxi/Martı')
+    
+    # Tekrarları kaldır
+    transport_modes = list(dict.fromkeys(transport_modes))
+    transport_data['transport_modes'] = transport_modes
+    print(f"🚌 Filtrelenmiş Transport modları: {transport_modes}")
+    
+    # Kriterleri al (CO2 Emission'dan Comfort'a kadar olan sütunlar)
+    criteria_columns = [
+        'CO2 Emission', 'Air Pollution', 'Noise Pollution', 'Occupancy R.',
+        'Transport.Cost', 'Travel Time', 'Capacity', 'Availability', 
+        'Intermodality', 'Waiting Time', 'Accessibility', 'Safety', 
+        'Flexibility', 'Comfort'
+    ]
+    
+    # Sütun isimlerini standartlaştır
+    column_mapping = {
+        'Occupancy R.': 'Occupancy Rate',
+        'Transport.Cost': 'Transport Cost'
+    }
+    
+    criteria = []
+    for col in criteria_columns:
+        if col in df.columns:
+            standard_name = column_mapping.get(col, col)
+            criteria.append(standard_name)
+    
+    transport_data['criteria'] = criteria
+    print(f"📊 Kriterler: {criteria}")
+    
+    # Her transport modu için veri oluştur - sadece geçerli modlar için
+    data = {}
+    for mode in transport_modes:
+        # Excel'de bu modun olduğu satırı bul
+        mode_rows = df[df['A/C'] == mode]
+        if not mode_rows.empty:
+            row_data = mode_rows.iloc[0]  # İlk eşleşen satırı al
+            data[mode] = {}
+            
+            for col in criteria_columns:
+                if col in df.columns:
+                    standard_name = column_mapping.get(col, col)
+                    value = row_data[col]
+                    if pd.notna(value) and isinstance(value, (int, float)):
+                        data[mode][standard_name] = int(value)
+                    else:
+                        data[mode][standard_name] = 0
+        else:
+            print(f"⚠️ {mode} için veri bulunamadı")
+    
+    transport_data['data'] = data
+    print(f"✅ {len(data)} transport modu verisi işlendi")
+    
+    # Mevcut JSON'dan diğer gerekli verileri al
+    try:
+        fallback_data = load_json_fallback()
+        transport_data['criteria_descriptions'] = fallback_data.get('criteria_descriptions', {})
+        transport_data['weight_preferences'] = fallback_data.get('weight_preferences', {})
+        transport_data['scientific_weights'] = fallback_data.get('scientific_weights', {})
+        transport_data['artasi_rankings'] = fallback_data.get('artasi_rankings', {})
+        print("✅ Ek veriler JSON'dan alındı")
+    except:
+        print("⚠️ JSON'dan ek veri alınamadı, varsayılan değerler kullanılacak")
+        transport_data['criteria_descriptions'] = {}
+        transport_data['weight_preferences'] = {}
+        transport_data['scientific_weights'] = {}
+        transport_data['artasi_rankings'] = {}
+    
+    return transport_data
+
+def load_json_fallback():
+    """JSON dosyasından veri yükle (fallback)"""
+    with open('transport_data.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+# Load transport data from Excel or JSON
+transport_data = load_excel_data()
 
 def calculate_weighted_scores(user_weights, mode="user"):
     """Calculate weighted scores with different modes."""
@@ -125,6 +251,33 @@ def get_artasi():
     return jsonify({
         'rankings': transport_data['artasi_rankings'],
         'comparison': get_artasi_comparison()
+    })
+
+@app.route('/debug')
+def debug_data():
+    """Debug için veri kaynağı ve yapısını göster"""
+    excel_file = 'article 16 group 32.xlsx'
+    source = "Excel" if os.path.exists(excel_file) else "JSON"
+    
+    return jsonify({
+        'data_source': source,
+        'transport_modes': transport_data.get('transport_modes', []),
+        'criteria_count': len(transport_data.get('criteria', [])),
+        'criteria': transport_data.get('criteria', []),
+        'sample_data': {
+            mode: data for mode, data in list(transport_data.get('data', {}).items())[:2]
+        }
+    })
+
+@app.route('/reload-data')
+def reload_data():
+    """Veriyi yeniden yükle"""
+    global transport_data
+    transport_data = load_excel_data()
+    return jsonify({
+        'status': 'success',
+        'message': 'Data reloaded successfully',
+        'transport_modes': transport_data.get('transport_modes', [])
     })
 
 if __name__ == '__main__':
