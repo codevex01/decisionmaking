@@ -120,12 +120,7 @@
             background: #f44336;
         }
 
-        .criteria-description {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
+
 
         .slider-container {
             position: relative;
@@ -420,11 +415,7 @@
             <div class="subtitle">Advanced Multi-Criteria Decision Making for Public Transport</div>
         </div>
         
-        <div class="article-info">
-            <h3>📚 Research-Based Implementation</h3>
-            <p><strong>Based on:</strong> Pamucar et al. (2023) - WENSLO & ARTASI Methods</p>
-            <p><strong>Article 16:</strong> "Weights by ENvelope and SLOpe" combined with "Alternative Ranking Technique based on Adaptive Standardized Intervals"</p>
-        </div>
+
 
         <div class="content">
             <div class="method-description">
@@ -445,11 +436,10 @@
                     <div class="criteria-item">
                         <div class="criteria-label">
                             {{ criterion }}
-                            <span class="preference-badge preference-{{ preferences[criterion] }}">
-                                {{ preferences[criterion] }} is better
+                            <span class="preference-badge preference-higher">
+                                importance level
                             </span>
                         </div>
-                        <div class="criteria-description">{{ descriptions[criterion] }}</div>
                         <div class="slider-container">
                             <input type="range" 
                                    class="slider" 

@@ -8,11 +8,7 @@ from math import log10
 app = Flask(__name__)
 
 class WensloArtasiCalculator:
-    """
-    WENSLO-ARTASI Implementation based on Article 16
-    WENSLO: Weights by ENvelope and SLOpe (Pamucar et al., 2023)
-    ARTASI: Alternative Ranking Technique based on Adaptive Standardized Intervals (Pamucar et al., 2024)
-    """
+    
     
     def __init__(self):
         self.load_data()
@@ -152,20 +148,33 @@ class WensloArtasiCalculator:
         
         return weights
     
-    def artasi_scores(self, X, w, alpha=0.5, phi=1.0):
+    def artasi_scores(self, X, w, alpha=0.5, phi=1.0, is_user_weights=False):
         """
         ARTASI: Alternative Ranking Technique based on Adaptive Standardized Intervals
         Based on Pamucar et al., 2024 - Article 16 formulas
+        
+        Args:
+            is_user_weights: If True, treats all weights as "higher is better" (user importance)
+                            If False, applies criteria_preferences (data transformations)
         """
         m, n = X.shape
         
         # Step 1: Handle criteria direction (benefit/cost)  
         X_normalized = X.copy().astype(float)
-        for j, criterion in enumerate(self.criteria):
-            if self.criteria_preferences.get(criterion, 'higher') == 'lower':
-                # For cost criteria (lower is better), use reciprocal transformation
-                # to make "lower is better" into "higher is better"
-                X_normalized[:, j] = 1 / (X_normalized[:, j] + 1e-10)
+        
+        if not is_user_weights:
+            # For objective weights (WENSLO), apply criteria preferences to data
+            for j, criterion in enumerate(self.criteria):
+                if self.criteria_preferences.get(criterion, 'higher') == 'lower':
+                    # For cost criteria (lower is better), use reciprocal transformation
+                    # to make "lower is better" into "higher is better"
+                    X_normalized[:, j] = 1 / (X_normalized[:, j] + 1e-10)
+        else:
+            # For user weights, we still need to transform data based on criteria preferences
+            # but treat user weights as all "higher is better"
+            for j, criterion in enumerate(self.criteria):
+                if self.criteria_preferences.get(criterion, 'higher') == 'lower':
+                    X_normalized[:, j] = 1 / (X_normalized[:, j] + 1e-10)
         
         # Step 2: Vector normalization (better than min-max for preserving ratios)
         # Normalize each column to unit vector
@@ -219,7 +228,8 @@ class WensloArtasiCalculator:
             user_weight_vector = np.array([user_weights.get(criterion, 1.0) for criterion in self.criteria])
             user_weight_vector = user_weight_vector / user_weight_vector.sum()  # Normalize
             
-            user_artasi_scores = self.artasi_scores(self.decision_matrix, user_weight_vector)
+            # For user weights, all preferences are "higher is better" (importance levels)
+            user_artasi_scores = self.artasi_scores(self.decision_matrix, user_weight_vector, is_user_weights=True)
             max_user_score = user_artasi_scores.max() if user_artasi_scores.max() > 0 else 1
             
             user_scores = {}
